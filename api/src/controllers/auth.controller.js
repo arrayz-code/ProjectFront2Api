@@ -1,10 +1,10 @@
-
 import User from "../models/user.model.js"
 import Role from "../models/Role.js";
 import bcrypt from "bcryptjs";
 import { createAccessToken } from "../libs/jwt.js"
 import  jwt  from "jsonwebtoken";
-import { TOKEN_SECRET } from "../config.js";
+import { TOKEN_SECRET,ADMIN_EMAIL, ADMIN_PASSWORD } from "../config.js";
+
 
 
 
@@ -62,38 +62,51 @@ export const register = async (req, res) => {
 
 
 
+
 export const login = async (req, res) => {
-    const { email, password } = req.body
+    const { email, password } = req.body;
     try {
-    
+        let userFound;
 
-        const userFound = await User.findOne({ email: req.body.email })
-        if (!userFound) return res.status(400).json({ message: "Usuario no encontrado" })
+        // Verificar si es el usuario administrador por defecto
+        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+            userFound = await User.findOne({ email: ADMIN_EMAIL });
+        } else {
+            // Proceso normal de autenticación para otros usuarios
+            userFound = await User.findOne({ email }).populate("roles");
+        }
 
-        const isMatch = await bcrypt.compare(password, userFound.password);
-        if (!isMatch) return res.status(400).json({ message: "Contraseña Incorrecta" })
+        if (!userFound) {
+            return res.status(400).json({ message: "Usuario no encontrado" });
+        }
 
-        
-
-        const token = await createAccessToken({ id: userFound._id })
-
-
-
-        res.cookie("token", token)
+        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+            // Crear token para el usuario administrador por defecto
+            const token = await createAccessToken({ id: userFound._id });
+            res.cookie("token", token);
+        } else {
+            // Proceso normal de autenticación para otros usuarios
+            const isMatch = await bcrypt.compare(password, userFound.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: "Contraseña Incorrecta" });
+            }
+            const token = await createAccessToken({ id: userFound._id });
+            res.cookie("token", token);
+        }
 
         res.json({
-
             id: userFound._id,
             username: userFound.username,
             email: userFound.email,
             roles: userFound.roles,
             createdAt: userFound.createdAt,
             updatedAt: userFound.updatedAt
-        })
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        res.status(500).json({ message: error.message });
     }
 };
+
 
 
 

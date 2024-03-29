@@ -1,7 +1,7 @@
+import jwt from "jsonwebtoken";
 import Role from "../models/Role.js";
 import User from "../models/user.model.js";
-
-import { ADMIN_EMAIL, ADMIN_USERNAME, ADMIN_PASSWORD } from "../config.js";
+import { ADMIN_EMAIL, ADMIN_USERNAME, ADMIN_PASSWORD, TOKEN_SECRET } from "../config.js";
 
 export const createRoles = async () => {
   try {
@@ -24,29 +24,40 @@ export const createRoles = async () => {
   }
 };
 
-
-
 export const createAdmin = async () => {
-  // check for an existing admin user
-  const userFound = await User.findOne({ email: ADMIN_EMAIL });
+  try {
+    // Verificar si el usuario administrador ya existe
+    const userFound = await User.findOne({ email: ADMIN_EMAIL });
+    if (userFound) {
+      
+      return;
+    }
 
-  if (userFound) return;
+    // Buscar el rol "admin" en la base de datos
+    const adminRole = await Role.findOne({ name: "admin" });
+    if (!adminRole) {
+      console.error("El rol de administrador no se encontró en la base de datos.");
+      return;
+    }
 
-  // get roles _id
-  const roles = await Role.find({ name: { $in: ["admin"] } });
+    // Crear un nuevo usuario administrador
+    const newUser = await User.create({
+      username: ADMIN_USERNAME,
+      email: ADMIN_EMAIL,
+      password: ADMIN_PASSWORD,
+      roles: [adminRole._id], // Asignar el ID del rol al usuario
+    });
 
-  // create a new admin user
-  const newUser = await User.create({
+    console.log(`Nuevo usuario administrador creado: ${newUser.email}`);
 
-    username: ADMIN_USERNAME,
-    email: ADMIN_EMAIL,
-    password: ADMIN_PASSWORD,
-    roles: roles.map((role) => role._id),
-  });
+    const token = jwt.sign({ id: newUser._id }, TOKEN_SECRET);
 
-  console.log(`new user created: ${newUser.email}`);
-
-  
+    return token;
+  } catch (error) {
+    console.error("Error al crear el usuario administrador:", error);
+  }
 };
 
 createAdmin();
+    
+
