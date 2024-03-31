@@ -17,7 +17,7 @@ export const createRoles = async () => {
 
       console.log("Roles creados:", values);
     } else {
-
+      console.log("Los roles ya existen.");
     }
   } catch (error) {
     console.error("Error al crear roles:", error);
@@ -29,7 +29,7 @@ export const createAdmin = async () => {
     // Verificar si el usuario administrador ya existe
     const userFound = await User.findOne({ email: ADMIN_EMAIL });
     if (userFound) {
-      
+      console.log("El usuario administrador ya existe.");
       return;
     }
 

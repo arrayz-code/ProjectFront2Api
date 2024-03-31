@@ -1,13 +1,16 @@
-import mongoose from "mongoose";
 
-export const ROLES = ["user", "admin"];
+import mongoose from "mongoose";
 
 const roleSchema = new mongoose.Schema(
   {
-    name: String,
+    name: {
+      type: String,
+      required: true,
+      unique: true
+    }
   },
   {
-    versionKey: false,
+    versionKey: false // Esto evita la creación del campo "__v"
   }
 );
 

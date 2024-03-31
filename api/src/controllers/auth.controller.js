@@ -93,7 +93,7 @@ export const login = async (req, res) => {
             const token = await createAccessToken({ id: userFound._id });
             res.cookie("token", token);
         }
-
+        const roles = userFound.roles.map(role => role.name);
         res.json({
             id: userFound._id,
             username: userFound.username,
