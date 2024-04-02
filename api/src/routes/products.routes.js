@@ -6,7 +6,7 @@ import {
   deleteProductById,
   getProductById,
 } from "../controllers/products.controller.js";
-//import { verifyToken, isModerator, isAdmin } from "../middlewares/authJwt.js";
+
 
 const router = Router();
 
@@ -21,3 +21,4 @@ router.put("/:productId", updateProductById);
 router.delete("/:productId", deleteProductById);
 
 export default router;
+//TFCXEZT6A85VNLFGJMPP145G

@@ -62,7 +62,6 @@ export const register = async (req, res) => {
 
 
 
-
 export const login = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -70,42 +69,46 @@ export const login = async (req, res) => {
 
         // Verificar si es el usuario administrador por defecto
         if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-            userFound = await User.findOne({ email: ADMIN_EMAIL });
+            // Proceso para el usuario administrador por defecto
+            userFound = await User.findOne({ email: ADMIN_EMAIL }).populate("roles");
         } else {
             // Proceso normal de autenticación para otros usuarios
             userFound = await User.findOne({ email }).populate("roles");
-        }
-
-        if (!userFound) {
-            return res.status(400).json({ message: "Usuario no encontrado" });
-        }
-
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-            // Crear token para el usuario administrador por defecto
-            const token = await createAccessToken({ id: userFound._id });
-            res.cookie("token", token);
-        } else {
-            // Proceso normal de autenticación para otros usuarios
-            const isMatch = await bcrypt.compare(password, userFound.password);
-            if (!isMatch) {
-                return res.status(400).json({ message: "Contraseña Incorrecta" });
+            
+            // Verificar si el usuario no es encontrado o la contraseña es incorrecta
+            if (!userFound || !(await bcrypt.compare(password, userFound.password))) {
+                return res.status(400).json({ message: "Usuario o contraseña incorrectos" });
             }
-            const token = await createAccessToken({ id: userFound._id });
-            res.cookie("token", token);
         }
-        const roles = userFound.roles.map(role => role.name);
-        res.json({
+
+        // Crear token de acceso para ambos tipos de usuario
+        const token = await createAccessToken({ id: userFound._id });
+        res.cookie("token", token);
+
+        // Obtener los roles de usuario en el mismo formato para ambos tipos
+        const roles = userFound.roles.map(role => {
+            if (role.name) {
+                return role.name;
+            } else {
+                return role; // Si el nombre no está definido, devolver el objeto completo
+            }
+        });
+
+        // Devolver la misma estructura de datos para ambos tipos de usuario
+        return res.json({
             id: userFound._id,
             username: userFound.username,
             email: userFound.email,
-            roles: userFound.roles,
+            roles: roles,
             createdAt: userFound.createdAt,
             updatedAt: userFound.updatedAt
         });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 
