@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import Role from "../models/Role.js";
 import User from "../models/user.model.js";
+import { createInitialProducts } from "./initialProducts.js";
 import { ADMIN_EMAIL, ADMIN_USERNAME, ADMIN_PASSWORD, TOKEN_SECRET } from "../config.js";
 
 export const createRoles = async () => {
@@ -26,6 +27,14 @@ export const createRoles = async () => {
 
 export const createAdmin = async () => {
   try {
+    // Verificar si los roles ya existen
+    const existingRoles = await Role.find();
+
+    if (existingRoles.length === 0) {
+      // Los roles no existen, crearlos
+      await createRoles();
+    }
+
     // Verificar si el usuario administrador ya existe
     const userFound = await User.findOne({ email: ADMIN_EMAIL });
     if (userFound) {
@@ -58,6 +67,6 @@ export const createAdmin = async () => {
   }
 };
 
-createAdmin();
-    
 
+createAdmin();
+createInitialProducts();

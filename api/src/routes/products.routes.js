@@ -21,4 +21,3 @@ router.put("/:productId", updateProductById);
 router.delete("/:productId", deleteProductById);
 
 export default router;
-//TFCXEZT6A85VNLFGJMPP145G
