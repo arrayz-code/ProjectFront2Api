@@ -2,8 +2,12 @@ import Product from "../models/Product.js"; // Importa el modelo de productos
 
 export const createInitialProducts = async () => {
   try {
-    // Crear algunos productos de ejemplo
-    const products = [
+    // Verificar si ya existen productos en la base de datos antes de crear los nuevos
+    const existingProducts = await Product.find();
+    if (existingProducts.length === 0) {
+      // Crear algunos productos de ejemplo
+      const products = [
+
         {
           "name": "Laptop Lenovo ThinkPad X1 Carbon",
           "category": "Computadoras portátiles",
@@ -64,12 +68,15 @@ export const createInitialProducts = async () => {
           "price": 449.99,
           "imgURL": "https://www.hp.com/es-es/shop/Html/Merch/Images/c06322144_1750x1285.jpg"
         }
-      ];
+     ];
 
-    // Guardar los productos en la base de datos
-    const createdProducts = await Product.create(products); // Crea los productos en la base de datos
+      // Guardar los productos en la base de datos
+      const createdProducts = await Product.create(products);
 
-    console.log('Productos creados:', createdProducts);
+      console.log('Productos creados:', createdProducts);
+    } else {
+      console.log('Ya existen productos en la base de datos. No se crearon productos nuevos.');
+    }
   } catch (error) {
     console.error('Error al crear productos:', error);
   }
